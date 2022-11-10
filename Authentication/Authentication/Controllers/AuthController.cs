@@ -32,16 +32,19 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("SiginUp")]
-    public async Task<IActionResult> Register([FromBody]User user)
+    public async Task<IActionResult> Register([FromBody] User user)
     {
+        var result = new Result { Data = null, ErrorMessage = "Success", StatusCode = 200 };
         var userModel = ToModel(user);
 
-        var result = await _userManager.CreateAsync(userModel, user.Password);
+        var createdUser = await _userManager.CreateAsync(userModel, user.Password);
 
-        if (result.Succeeded)
-            return Ok();
+        if (createdUser.Succeeded)
+            return Ok(result);
 
-        return Unauthorized();
+        result.ErrorMessage = "UnSuccess";
+        result.StatusCode = 401;
+        return Unauthorized(result);
     }
 
     private Auth.Models.User ToModel(User user)
@@ -56,16 +59,19 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(User user)
     {
         var userModel = await _userManager.FindByNameAsync(user.UserName);
+        var result = new Result { Data = null, ErrorMessage = "UnSuccess", StatusCode = 401 };
+
 
         if (user is null)
-            return Unauthorized();
+            return Unauthorized(result);
 
         await _signInManager.SignOutAsync();
 
-        var signInResult = await _signInManager.PasswordSignInAsync(ToModel(user), userModel.PasswordHash, false, false);
+        // var signInResult = await _signInManager.PasswordSignInAsync(ToModel(user), userModel.PasswordHash, false, false);
 
         // if (!signInResult.Succeeded)
-        //     return Unauthorized();
+        //     _logger.LogInformation("=========> ");
+        // return Unauthorized();
 
         List<Claim> claims = new List<Claim>{
 
@@ -84,8 +90,11 @@ public class AuthController : ControllerBase
         );
 
         var token = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
-
-        return Ok(token);
+        result.Data = token;
+        result.ErrorMessage = "Success";
+        result.StatusCode = 201;
+        
+        return Ok(result);
     }
 
     [HttpPost("logOut")]
