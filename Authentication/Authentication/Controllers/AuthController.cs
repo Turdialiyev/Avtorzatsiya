@@ -3,7 +3,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Auth.Dtos;
+using Auth.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -31,52 +31,75 @@ public class AuthController : ControllerBase
         _roleManager = roleManager;
     }
 
-    [HttpPost("SiginUp")]
-    public async Task<IActionResult> Register([FromBody] User user)
+    [HttpPost("SignUp")]
+    public async Task<IActionResult> Register([FromBody] UserRegiter user)
     {
-        var result = new Result { Data = null, ErrorMessage = "Success", StatusCode = 200 };
-        var userModel = ToModel(user);
+
+        var result = new Result<string>();
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        var existUser = _userManager.FindByNameAsync(user.UserName);
+
+        if (existUser.Result is not null)
+        {
+            result.Error = new Error { Code = 1, Message = "UserName Already exist" };
+            return Ok(result);
+        }
+
+        var userModel = new User
+        {
+            UserName = user.UserName,
+            PasswordHash = user.Password,
+            Email = user.Email
+        };
 
         var createdUser = await _userManager.CreateAsync(userModel, user.Password);
 
         if (createdUser.Succeeded)
-            return Ok(result);
+        {
+            result.Error = new Error { Code = 0, Message = "Success" };
 
-        result.ErrorMessage = "UnSuccess";
-        result.StatusCode = 401;
-        return Unauthorized(result);
+            return Ok(result);
+        }
+
+        result.Error = new Error { Code = 4, Message = "Unexpected error" };
+
+        return Ok(result);
     }
 
-    private Auth.Models.User ToModel(User user)
-    => new()
+    [HttpPost("SignIn")]
+    public async Task<IActionResult> Login([FromBody] UserLogin user)
     {
-        UserName = user.UserName,
-        Email = user.Email,
-        PasswordHash = user.Password,
-    };
+        var result = new Result<string>();
 
-    [HttpPost("SiginIn")]
-    public async Task<IActionResult> Login(User user)
-    {
-        var userModel = await _userManager.FindByNameAsync(user.UserName);
-        var result = new Result { Data = null, ErrorMessage = "UnSuccess", StatusCode = 401 };
+        if (!ModelState.IsValid)
+            return BadRequest();
 
+        var existUser = await _userManager.FindByNameAsync(user.UserName);
 
-        if (user is null)
-            return Unauthorized(result);
+        if (existUser is null)
+        {
+            result.Error = new Error { Code = 2, Message = "UserName is not valid" };
 
-        await _signInManager.SignOutAsync();
+            return Ok(result);
+        }
 
-        // var signInResult = await _signInManager.PasswordSignInAsync(ToModel(user), userModel.PasswordHash, false, false);
+        var signInResult = await _signInManager.CheckPasswordSignInAsync(existUser, user.Password, false);
 
-        // if (!signInResult.Succeeded)
-        //     _logger.LogInformation("=========> ");
-        // return Unauthorized();
+        if (!signInResult.Succeeded)
+        {
+            result.Error = new Error { Code = 3, Message = "Password is invalid" };
+
+            return Ok(result);
+        }
 
         List<Claim> claims = new List<Claim>{
 
             new Claim(ClaimTypes.Name, user.UserName!),
-            new Claim(ClaimTypes.Email, user.Email!),
         };
 
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("salom#2_saSad_@sasa:Asasasldlnl"));
@@ -90,10 +113,10 @@ public class AuthController : ControllerBase
         );
 
         var token = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+
         result.Data = token;
-        result.ErrorMessage = "Success";
-        result.StatusCode = 201;
-        
+        result.Error = new Error { Code = 0, Message = "Success" };
+
         return Ok(result);
     }
 

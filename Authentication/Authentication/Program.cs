@@ -8,7 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseInMemoryDatabase(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -38,6 +38,17 @@ builder.Services.AddAuthentication(opt =>
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "MyProject",
+                      policy  =>
+                      {
+                          policy.WithOrigins("*")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();                          
+                      });
+});
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -52,6 +63,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("MyProject");
 
 app.UseAuthentication();
 app.UseAuthorization();
