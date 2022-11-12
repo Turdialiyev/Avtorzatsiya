@@ -1,8 +1,13 @@
 namespace Auth.Controllers;
 
-public class Result
+public class Result<T>
 {
-    public string? Data { get; set; }
-    public string? ErrorMessage { get; set; }
-    public int StatusCode { get; set; }
+    public T? Data { get; set; }
+    public Error? Error { get; set;}
+}
+
+public class Error
+{
+    public string? Message { get; set; }
+    public int Code { get; set; }
 }
