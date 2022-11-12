@@ -1,0 +1,60 @@
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <h2 style="text-align: center;">Register</h2>
+            <form [formGroup]="form" (ngSubmit) = "onSubmit()" >
+                <div class="form-group">
+                    <label for="UserName">UserName:</label>
+                    <input 
+                     formControlName="UserName" 
+                     id="UserName"
+                     [ngClass]="{ 'is-invalid': submitted && form.controls['UserName'].errors }" 
+                     type="text" class="form-control" />
+                     <div *ngIf="submitted && form.controls['UserName'].errors" class="text-danger">
+                        <div *ngIf="submitted && form.controls['UserName'].errors['required']">UserName is Required. </div>
+                     </div>
+                     <!-- backend validate -->
+                     <div *ngIf=" result != null && result.error != null">
+                        <div *ngIf="result.error.code == 1" class="text-danger">
+                            {{result.error.message}}
+                        </div>
+                    </div>
+                    <div *ngIf="password != null" class="text-danger">{{userName}}</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="Email">Email Adress:</label>
+                    <input t
+                    ype="email" 
+                    formControlName="Email" 
+                    [ngClass]="{ 'is-invalid': submitted && form.controls['Email'].errors }"
+                    class="form-control">
+                    <div *ngIf="submitted && form.controls['Email'].errors" class="text-danger">
+                        <div *ngIf="submitted && form.controls['Email'].errors['required']">Email is Required. </div>
+                        <div *ngIf="submitted && form.controls['Email'].errors['email']">email is not correct. </div>
+                    </div>
+                    <div *ngIf="email != null" class="text-danger">{{email}}</div>
+                </div>
+                <div class="form-group">
+                    <label for="Password">Password:</label>
+                    <input 
+                    type="password" 
+                    formControlName="Password" 
+                    [ngClass]="{ 'is-invalid': submitted && form.controls['Password'].errors }"
+                    class="form-control">
+                    <div *ngIf="submitted && form.controls['Password'].errors" class="text-danger">
+                        <div *ngIf="submitted && form.controls['Password'].errors['required']">Password is Required. </div>
+                        <div *ngIf="submitted && form.controls['Password'].errors['minlength']">Password at lest 6 charector. </div>
+                     </div>
+                     <!-- backend validate -->
+                     <div *ngIf="password != null" class="text-danger">{{password}}</div>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-primary">Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

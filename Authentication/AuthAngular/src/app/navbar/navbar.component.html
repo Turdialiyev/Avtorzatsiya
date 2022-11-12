@@ -1,0 +1,24 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
+        <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+            <li class="nav-item active">
+                <a class="nav-link" routerLink="/">Home</a>
+            </li>
+            <li class="nav-item" *ngIf="!isLoggedIn()"> 
+                <a class="nav-link" routerLink="register">Register</a>
+            </li>
+            <li class="nav-item" *ngIf="!isLoggedIn()">
+                <a class="nav-link" routerLink="login">Login</a>
+            </li>
+            <li class="nav-item" *ngIf="isLoggedIn()">
+                <a class="nav-link" (click)="authLogOut()">LogOut</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div *ngIf="isLoggedIn()">
+    <div *ngIf="currentUser() != null">
+        UserName : 
+        {{userName}}
+    </div>
+</div>
